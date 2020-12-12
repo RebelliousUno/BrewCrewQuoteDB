@@ -34,7 +34,7 @@ def handle_delete(search, dynamodb=None):
     table = dynamodb.Table('Serge_quotes')
     response = table.delete_item(
         Key={
-            'id': search
+            'id': int(search)
         }
     )
     return response
