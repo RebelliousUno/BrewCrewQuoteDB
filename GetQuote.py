@@ -13,7 +13,7 @@ class Search(Enum):
     NOMATCH = 4
     
 
-def parseSearch(search):
+def parse_search(search):
     idMatcher = re.compile("\d+")
     dateMatcher = re.compile("\d{4}-\d{2}-\d{2}")
     textMatchers = re.compile("[a-zA-Z0-9]*")
@@ -26,13 +26,13 @@ def parseSearch(search):
         return Search.TEXT
     return Search.NOMATCH
     
-def getApiKey():
+def get_api_key():
     client = boto3.client('ssm')
     param = client.get_parameter(Name='sergeApiToken')
     return param['Parameter']['Value']
 
     
-def handleSearch(search, searchType, dynamodb=None):
+def handle_search(search, searchType, dynamodb=None):
     if not dynamodb:
         dynamodb = boto3.resource('dynamodb')
         table = dynamodb.Table('Serge_quotes')
@@ -75,7 +75,7 @@ def handleSearch(search, searchType, dynamodb=None):
 
 def lambda_handler(event, context):
     # TODO implement
-    api_key = getApiKey()
+    api_key = get_api_key()
 
     key = event['queryStringParameters']['key']
     if not key or key != api_key:
@@ -86,8 +86,8 @@ def lambda_handler(event, context):
         }
     
     search = event['queryStringParameters']['search'].strip()
-    searchType = parseSearch(search)
-    result = handleSearch(search, searchType)
+    searchType = parse_search(search)
+    result = handle_search(search, searchType)
     print(result)
     return {
         'statusCode': 200,
