@@ -74,7 +74,6 @@ def handle_search(search, searchType, dynamodb=None):
         
 
 def lambda_handler(event, context):
-    # TODO implement
     api_key = get_api_key()
 
     key = event['queryStringParameters']['key']
