@@ -14,9 +14,9 @@ class Search(Enum):
     
 
 def parse_search(search):
-    idMatcher = re.compile("\d+")
-    dateMatcher = re.compile("\d{4}-\d{2}-\d{2}")
-    textMatchers = re.compile("[a-zA-Z0-9]*")
+    idMatcher = re.compile(r"\d+")
+    dateMatcher = re.compile(r"\d{4}-\d{2}-\d{2}")
+    textMatchers = re.compile(r"[a-zA-Z0-9]*")
     
     if dateMatcher.search(search):
         return Search.DATE
@@ -35,33 +35,33 @@ def get_api_key():
 def handle_search(search, searchType, dynamodb=None):
     if not dynamodb:
         dynamodb = boto3.resource('dynamodb')
-        table = dynamodb.Table('Serge_quotes')
-        if searchType == Search.ID:
-            response = table.query(
-                KeyConditionExpression=Key('id').eq(int(search))
+    table = dynamodb.Table('Serge_quotes')
+    if searchType == Search.ID:
+        response = table.query(
+            KeyConditionExpression=Key('id').eq(int(search))
+        )
+    elif searchType == Search.DATE:
+        response = table.query(
+            IndexName = "date-id-index",
+            KeyConditionExpression=Key("date").eq(search)
             )
-        elif searchType == Search.DATE:
-            response = table.query(
-                IndexName = "date-id-index",
-                KeyConditionExpression=Key("date").eq(search)
-                )
-        elif searchType == Search.TEXT:
-            print(search.lower())
-            quote = table.scan(
-                IndexName = "quote_lower-id-index",
-                FilterExpression=Attr("quote_lower").contains(search.lower())
-                )
-            print(quote)
-            author = table.scan(
-                IndexName = "author_lower-id-index",
-                FilterExpression=Attr("author_lower").contains(search.lower())
-                )
-            if len(quote["Items"]) > 0:
-                print("Found Quotes")
-                response = quote
-                response["Items"].extend(author["Items"])
-            else: 
-                response = author
+    elif searchType == Search.TEXT:
+        print(search.lower())
+        quote = table.scan(
+            IndexName = "quote_lower-id-index",
+            FilterExpression=Attr("quote_lower").contains(search.lower())
+            )
+        print(quote)
+        author = table.scan(
+            IndexName = "author_lower-id-index",
+            FilterExpression=Attr("author_lower").contains(search.lower())
+            )
+        if len(quote["Items"]) > 0:
+            print("Found Quotes")
+            response = quote
+            response["Items"].extend(author["Items"])
+        else:
+            response = author
           
     print(response)      
     if len(response["Items"])>0:   

@@ -1,5 +1,6 @@
 import re
 from decimal import Decimal
+
 import boto3
 from boto3.dynamodb.conditions import Key
 
@@ -13,38 +14,38 @@ def get_api_key():
 def add_quote(quote, dynamodb=None):
     if not dynamodb:
         dynamodb = boto3.resource('dynamodb')
-        table = dynamodb.Table('Serge_quotes')
-        response = table.query(
-            KeyConditionExpression=Key('id').eq(-1)
-        )
-        print(response['Items'])
-        quote['id'] = response['Items'][0]['val']
+    table = dynamodb.Table('Serge_quotes')
+    response = table.query(
+        KeyConditionExpression=Key('id').eq(-1)
+    )
+    print(response['Items'])
+    quote['id'] = response['Items'][0]['val']
 
-        table.put_item(
-            Item={
-                'id': quote['id'],
-                'quote': quote['quote'],
-                'quote_lower': quote['quote'].lower(),
-                'author': quote['author'],
-                'author_lower': quote['author'].lower(),
-                'date': quote['date']
-            }
-        )
-        update_item = table.update_item(
-            Key={
-                'id': -1
-            },
-            UpdateExpression='set val = val + :update',
-            ExpressionAttributeValues={
-                ':update': Decimal(1)
-            },
-            ReturnValues='UPDATED_NEW'
-        )
+    table.put_item(
+        Item={
+            'id': quote['id'],
+            'quote': quote['quote'],
+            'quote_lower': quote['quote'].lower(),
+            'author': quote['author'],
+            'author_lower': quote['author'].lower(),
+            'date': quote['date']
+        }
+    )
+    update_item = table.update_item(
+        Key={
+            'id': -1
+        },
+        UpdateExpression='set val = val + :update',
+        ExpressionAttributeValues={
+            ':update': Decimal(1)
+        },
+        ReturnValues='UPDATED_NEW'
+    )
     return quote['id']
 
 
 def parse_quote(quote):
-    c = re.compile('(?P<quote>["\*].*["\*])\s*-\s*(?P<author>.*)\s*,\s*(?P<date>\d{4}-\d{2}-\d{2})')
+    c = re.compile(r"(?P<quote>[\"*].*[\"*])\s*-\s*(?P<author>.*)\s*,\s*(?P<date>\d{4}-\d{2}-\d{2})")
     x = c.match(quote)
 
     if x:
@@ -94,4 +95,3 @@ def lambda_handler(event, context):
         'statusCode': 500,
         'body': 'Could not add quote'
     }
-
